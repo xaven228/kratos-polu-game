@@ -602,7 +602,7 @@ MonoBehaviour:
   jumpHeight: 2
   gravity: -9.81
   mouseSensitivity: 6
-  bodyTurnSpeed: 0.1
+  bodyTurnSpeed: 0.5
   groundCheck: {fileID: 387940984}
   groundDistance: 1
   groundMask:

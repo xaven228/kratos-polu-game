@@ -86,19 +86,22 @@ void HandleGroundCheck()
         }
     }
 
-    void HandleCameraRotation()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-        
-        verticalRotation -= mouseY;
-        verticalRotation = Mathf.Clamp(verticalRotation, minVerticalAngle, maxVerticalAngle);
-        cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
-        headTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
-        
-        transform.Rotate(Vector3.up * mouseX);
-        
-        float bodyTargetRotation = cameraTransform.eulerAngles.y;
-        bodyTransform.rotation = Quaternion.Lerp(bodyTransform.rotation, Quaternion.Euler(0f, bodyTargetRotation, 0f), Time.deltaTime * bodyTurnSpeed);
-    }
+void HandleCameraRotation()
+{
+    float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+    float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+    verticalRotation -= mouseY;
+    verticalRotation = Mathf.Clamp(verticalRotation, minVerticalAngle, maxVerticalAngle);
+    cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+    headTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+
+    // Поворот всего объекта (включая тело)
+    transform.Rotate(Vector3.up * mouseX);
+
+    // Поворот тела с задержкой
+    float bodyTargetRotation = cameraTransform.eulerAngles.y;
+    bodyTransform.rotation = Quaternion.Lerp(bodyTransform.rotation, Quaternion.Euler(0f, bodyTargetRotation, 0f), Time.deltaTime * bodyTurnSpeed);
+}
+
 }
