@@ -17,7 +17,7 @@ public class LoopAnimation : MonoBehaviour
         }
 
         // Проверка наличия анимационного клипа
-        AnimationClip clip = anim.GetClip("walk");
+        AnimationClip clip = anim.GetClip("walk-kolya-1");
         if (clip == null)
         {
             Debug.LogError("Animation clip 'walk' not found.");
@@ -26,6 +26,6 @@ public class LoopAnimation : MonoBehaviour
 
         // Установить режим зацикливания для анимационного клипа
         anim.wrapMode = WrapMode.Loop;
-        anim.Play("walk");
+        anim.Play("walk-kolya-1");
     }
 }

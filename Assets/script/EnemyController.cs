@@ -2,72 +2,61 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    public Transform[] waypoints; // Точки, между которыми будет двигаться враг
-    public float speed = 2f; // Скорость движения врага
+    public Transform playerTransform; // Ссылка на игрока
     public GameObject projectilePrefab; // Префаб снаряда
-    public float fireInterval = 2f; // Интервал стрельбы
-    public float projectileSpeed = 5f; // Скорость снаряда
-
-    private int currentWaypointIndex = 0;
+    public float fireInterval = 1f; // Интервал стрельбы
+    public float projectileSpeed = 10f; // Скорость снаряда
     private float timeSinceLastFire = 0f;
 
     void Update()
     {
-        MoveEnemy();
+        LookAtPlayer();
         FireProjectiles();
     }
 
-    void MoveEnemy()
+    void LookAtPlayer()
     {
-        if (waypoints.Length == 0) return;
-
-        Transform targetWaypoint = waypoints[currentWaypointIndex];
-        Vector3 direction = targetWaypoint.position - transform.position;
-
-        if (direction.magnitude < 0.1f)
+        if (playerTransform == null)
         {
-            // Переключиться на следующую точку
-            currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length;
+            Debug.LogError("Player Transform is not assigned.");
+            return;
         }
-        else
-        {
-            // Двигаться к текущей точке
-            transform.Translate(direction.normalized * speed * Time.deltaTime, Space.World);
-        }
+
+        Vector3 direction = playerTransform.position - transform.position;
+        direction.y = 0; // Игнорируем вертикальное направление
+        direction.Normalize();
+
+        // Поворот головы врага в сторону игрока
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f); // Плавный поворот
     }
 
     void FireProjectiles()
     {
         timeSinceLastFire += Time.deltaTime;
-
         if (timeSinceLastFire >= fireInterval)
         {
             timeSinceLastFire = 0f;
-            FireInDirection(Vector3.forward);
-            FireInDirection(Vector3.back);
-            FireInDirection(Vector3.left);
-            FireInDirection(Vector3.right);
+            FireInDirection(playerTransform.position - transform.position);
         }
     }
 
     void FireInDirection(Vector3 direction)
     {
-        GameObject projectile = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+        // Добавляем небольшое отклонение для промахов
+        Vector3 randomOffset = new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(-0.5f, 0.5f), Random.Range(-0.5f, 0.5f));
+        Vector3 adjustedDirection = (direction + randomOffset).normalized;
+
+        // Создаем снаряд чуть впереди головы врага
+        Vector3 spawnPosition = transform.position + transform.forward * 1f; // Снаряд вылетает чуть впереди головы врага
+        GameObject projectile = Instantiate(projectilePrefab, spawnPosition, Quaternion.LookRotation(adjustedDirection));
         ProjectileController projectileController = projectile.GetComponent<ProjectileController>();
         if (projectileController != null)
         {
-            projectileController.Initialize(direction, projectileSpeed);
+            projectileController.targetType = ProjectileController.TargetType.Player; // Устанавливаем цель как игрока
+            projectileController.Initialize(adjustedDirection, projectileSpeed);
         }
-
         // Уничтожить снаряд через 2 секунды
         Destroy(projectile, 2f);
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            GameManager.Instance.GameOver();
-        }
     }
 }
