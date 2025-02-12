@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class ProjectileController : MonoBehaviour
 {
+    public enum TargetType { Player, Enemy }
+
+    public TargetType targetType; // Цель снаряда
+
     private Vector3 direction;
     private float speed;
 
@@ -19,10 +23,22 @@ public class ProjectileController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        switch (targetType)
         {
-            GameManager.Instance.GameOver();
-            Destroy(gameObject); // Уничтожить снаряд после столкновения
+            case TargetType.Player:
+                if (other.CompareTag("Player"))
+                {
+                    GameManager.Instance.GameOver();
+                    Destroy(gameObject); // Уничтожить снаряд после столкновения
+                }
+                break;
+            case TargetType.Enemy:
+                if (other.CompareTag("Enemy"))
+                {
+                    Destroy(other.gameObject); // Уничтожить врага
+                    Destroy(gameObject); // Уничтожить снаряд после столкновения
+                }
+                break;
         }
     }
 }
