@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public class MenuReturnScript : MonoBehaviour
 {
-    public string menuSceneName = "MainMenu"; // Имя сцены меню
+    public string menuSceneName = "menu"; // Имя сцены меню
 
     void Update()
     {
