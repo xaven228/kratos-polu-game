@@ -9,11 +9,20 @@ EditorBuildSettings:
     path: Assets/Scenes/menu.unity
     guid: ff756dd5533a4ea49a1d88810dae5a5e
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/Scenes/test.unity
+    guid: a814b78335f46ad4ba3ad5ce96579954
   - enabled: 1
-    path: Assets/Scenes/LOSE.unity
+    path: Assets/Scenes/GameOverScene.unity
     guid: 98e9797237ef7cb49b7885f8a9a34c7b
+  - enabled: 1
+    path: Assets/Scenes/WinScene.unity
+    guid: 619bad8015314c848a3029b2e0bda856
+  - enabled: 1
+    path: Assets/Scenes/animation.unity
+    guid: 5345292cbbe879d46a4e3fd83b3248fb
+  - enabled: 1
+    path: Assets/Scenes/mult.unity
+    guid: 408b7a0f27da62d498530d4335e7d46c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

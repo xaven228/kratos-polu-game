@@ -1,11 +1,12 @@
 using UnityEngine;
 
-public class CharacterControllerScript : MonoBehaviour
+public class CharacterMovement : MonoBehaviour
 {
     public Transform cameraTransform;
     public Transform headTransform;
     public Transform bodyTransform;
     public CharacterController controller;
+    public Animation characterAnimation;
     
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
@@ -13,7 +14,7 @@ public class CharacterControllerScript : MonoBehaviour
     public float gravity = -9.81f;
     public float mouseSensitivity = 2f;
     public float bodyTurnSpeed = 2f; // Скорость поворота тела медленнее головы
-
+    
     [Header("Ground Check")]
     public Transform groundCheck;
     public float groundDistance = 0.4f;
@@ -26,9 +27,18 @@ public class CharacterControllerScript : MonoBehaviour
     
     [Header("Debug")]
     public bool isGrounded;
-
+    
     private Vector3 velocity;
     private float verticalRotation = 0f;
+    private float moveMagnitude;
+
+    void Start()
+    {
+        characterAnimation = GetComponent<Animation>();
+        // Скрываем курсор при старте игры
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
 
     void Update()
     {
@@ -36,40 +46,32 @@ public class CharacterControllerScript : MonoBehaviour
         HandleMovement();
         HandleJump();
         HandleCameraRotation();
+        HandleAnimations();
     }
 
-void HandleGroundCheck()
-{
-    // Используем несколько точек проверки
-    Vector3[] checkPoints = new Vector3[]
+    void HandleGroundCheck()
     {
-        groundCheck.position,
-        groundCheck.position + new Vector3(0.5f, 0, 0),
-        groundCheck.position + new Vector3(-0.5f, 0, 0),
-        groundCheck.position + new Vector3(0, 0, 0.5f),
-        groundCheck.position + new Vector3(0, 0, -0.5f)
-    };
-
-    isGrounded = false;
-    foreach (var point in checkPoints)
-    {
-        if (Physics.CheckSphere(point, groundDistance, groundMask))
+        isGrounded = false;
+        // Луч вниз от позиции проверки земли
+        RaycastHit hit;
+        if (Physics.Raycast(groundCheck.position, Vector3.down, out hit, groundDistance + 0.1f, groundMask))
         {
-            isGrounded = true;
-            break;
+            float slopeAngle = Vector3.Angle(hit.normal, Vector3.up);
+            if (slopeAngle <= 45f) // Учитываем только плоские поверхности
+            {
+                isGrounded = true;
+            }
         }
     }
-}
 
     void HandleMovement()
     {
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
-        
         Vector3 moveDirection = cameraTransform.forward * moveZ + cameraTransform.right * moveX;
         moveDirection.y = 0;
+        moveMagnitude = moveDirection.magnitude;
         controller.Move(moveDirection.normalized * moveSpeed * Time.deltaTime);
-        
         velocity.y += gravity * Time.deltaTime;
         if (isGrounded && velocity.y < 0)
         {
@@ -80,28 +82,50 @@ void HandleGroundCheck()
 
     void HandleJump()
     {
-        if (isGrounded && Input.GetButtonDown("Jump"))
+        if (isGrounded)
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            if (Input.GetButtonDown("Jump"))
+            {
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            }
         }
     }
 
-void HandleCameraRotation()
-{
-    float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-    float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+    void HandleCameraRotation()
+    {
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        verticalRotation -= mouseY;
+        verticalRotation = Mathf.Clamp(verticalRotation, minVerticalAngle, maxVerticalAngle);
+        cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+        headTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+        // Поворот всего объекта (включая тело)
+        transform.Rotate(Vector3.up * mouseX);
+        // Поворот тела с задержкой
+        float bodyTargetRotation = cameraTransform.eulerAngles.y;
+        bodyTransform.rotation = Quaternion.Lerp(bodyTransform.rotation, Quaternion.Euler(0f, bodyTargetRotation, 0f), Time.deltaTime * bodyTurnSpeed);
+    }
 
-    verticalRotation -= mouseY;
-    verticalRotation = Mathf.Clamp(verticalRotation, minVerticalAngle, maxVerticalAngle);
-    cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
-    headTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+    void HandleAnimations()
+    {
+        if (moveMagnitude > 0)
+        {
+            if (!characterAnimation.IsPlaying("walk-1"))
+                characterAnimation.Play("walk-1");
+        }
+    }
 
-    // Поворот всего объекта (включая тело)
-    transform.Rotate(Vector3.up * mouseX);
-
-    // Поворот тела с задержкой
-    float bodyTargetRotation = cameraTransform.eulerAngles.y;
-    bodyTransform.rotation = Quaternion.Lerp(bodyTransform.rotation, Quaternion.Euler(0f, bodyTargetRotation, 0f), Time.deltaTime * bodyTurnSpeed);
-}
-
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+    }
 }
